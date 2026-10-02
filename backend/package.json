@@ -1,0 +1,12 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js"
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
