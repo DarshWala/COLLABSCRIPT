@@ -64,3 +64,22 @@ test("insert after a concurrently deleted character still works", () => {
   assert.strictEqual(alice.toString(), "HX");
   assert.strictEqual(bob.toString(), "HX");
 });
+
+test("a delete that arrives before its insert becomes a tombstone", () => {
+  const alice = new RGA("alice");
+  const insert = alice.localInsert(0, "A");
+  const remove = alice.localDelete(0);
+
+  const bob = new RGA("bob");
+  bob.apply(remove); // The network delivers the delete too early.
+
+  assert.strictEqual(bob.pending.length, 1);
+  assert.strictEqual(bob.toString(), "");
+
+  bob.apply(insert); // The insert unblocks the waiting delete.
+
+  assert.strictEqual(bob.pending.length, 0);
+  assert.strictEqual(bob.nodes.length, 1);
+  assert.strictEqual(bob.nodes[0].deleted, true);
+  assert.strictEqual(bob.toString(), "");
+});
