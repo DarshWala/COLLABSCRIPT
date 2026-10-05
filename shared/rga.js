@@ -20,10 +20,10 @@ export class RGA {
     this.pending = [];          
   }
 
-    // Characters the user can actually see (skip tombstones)
-
-    //- READING TEXTS AND LOCAL EDITS
-
+  
+  //- READING TEXTS AND LOCAL EDITS
+  
+  // Characters the user can actually see (skip tombstones)
   visibleNodes() {
     return this.nodes.filter((n) => !n.deleted);
   }
@@ -36,7 +36,7 @@ export class RGA {
   localInsert(index, value) {
     const visible = this.visibleNodes();
     if (index < 0 || index > visible.length) {
-      throw new RangeError("index out of range");
+      throw new RangeError("index out of- range");
     }
     const op = {
       type: "insert",
@@ -63,7 +63,7 @@ export class RGA {
     // Entry point for ALL ops, local or remote
 
     //- INTEGRATING OPS
-    
+
   apply(op) {
     if (this.tryApply(op)) {
       this.flushPending();      // this op may have unblocked waiting ones
