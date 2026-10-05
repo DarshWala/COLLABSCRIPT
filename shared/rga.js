@@ -1,6 +1,4 @@
-// An ID looks like { counter: 3, client: "alice" }
 
-// Turns an ID into a string like "3@alice" so we can use it as a Map key.
 export function idKey(id) {
   return `${id.counter}@${id.client}`;
 }
