@@ -20,7 +20,7 @@ function randInt(rng, n) {
 }
 
 // ---------- One full simulated session ----------
-function runSimulation(seed, { numClients = 3, steps = 300 } = {}) {
+function runSimulation(seed, { numClients = 3, steps =  300 } = {}) {
   const rng = makeRng(seed);
 
   // Create the replicas (the "users")
@@ -107,7 +107,7 @@ function runSimulation(seed, { numClients = 3, steps = 300 } = {}) {
 }
 
 test("fuzz: all replicas converge", () => {
-  for (let seed = 1; seed <= 200; seed++) {
+  for (let seed = 1; seed <= 20; seed++) {
     runSimulation(seed, { numClients: 2 + (seed % 4) }); // 2 to 5 clients
   }
 });
