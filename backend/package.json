@@ -9,7 +9,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch index.js",
-    "start": "node --watch src/server.js"
+    "start": "node --watch server.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
