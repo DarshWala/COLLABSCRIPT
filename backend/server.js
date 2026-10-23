@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
 import dns from "dns"
-import Doc from "./models/doc.js";
+// import Doc from "./models/Doc.js";
+import docRouter from "./routes/docs.js";
 // import connectDB from "./db.js";
 
 
@@ -27,11 +28,6 @@ try {
 
 app.listen(PORT , () => {
   console.log("Server running on port 5000");
-  // console.log(process.env.MONGODB_URI);
-
 })
 
-app.post("/test-doc", async (req, res) => {
-  const doc = await Doc.create({ title: req.body.title });
-  res.json(doc);
-}); 
+app.use(docRouter)
