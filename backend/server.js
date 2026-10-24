@@ -12,7 +12,7 @@ dns.setServers(['1.1.1.1', '8.8.8.8']);
 dotenv.config();
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: "http://localhost:5173" })); 
 app.use(express.json()); // parse JSON bodies
 app.use(docRouter)
 const PORT = process.env.PORT || 5000;
@@ -29,10 +29,10 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
+  console.log(`Socket connected (message from server) : ${socket.id}`);
 
   socket.on("disconnect", () => {
-    console.log(`Socket disconnected: ${socket.id}`);
+    console.log(`Socket disconnected (message from server): ${socket.id}`);
   });
 });
 
