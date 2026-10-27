@@ -1,8 +1,14 @@
-import mongoose from "mongoose";
-
 const docSchema = new mongoose.Schema(
-    {title : {type : String , default : "Untitled"}},
-    {timestamps: true}
-);
+  {
+    title: {
+      type: String,
+      default: "Untitled",
+    },
 
-export default mongoose.model("Doc", docSchema);
+    nextSequence: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true }
+);  
