@@ -7,6 +7,8 @@ import docRouter from "./routes/docs.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import Doc from "./models/Doc.js";
+import Operation from "./models/Operation.js";
+import { idKey } from "../shared/rga.js";
 
 
 dns.setServers(['1.1.1.1', '8.8.8.8']);
@@ -28,6 +30,52 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
   },
 });
+
+function getOperationKey(operation) {
+  if (operation.type === "insert") {
+    return `insert:${idKey(operation.id)}`;
+  }
+
+  if (operation.type === "delete") {
+    return `delete:${idKey(operation.target)}`;
+  }
+
+  return null;
+} 
+
+// VALIDITY CHECKER OF THE ID
+function isValidId(id) {
+  return (
+    id &&
+    typeof id === "object" &&
+    Number.isInteger(id.counter) &&
+    id.counter > 0 &&
+    typeof id.client === "string" &&
+    id.client.length > 0
+  );
+}
+
+// VALIDITY CHECKER OF THE RGA OPERATIONS ID
+function isValidOperation(operation) {
+  if (!operation || typeof operation !== "object") {
+    return false;
+  }
+
+  if (operation.type === "insert") {
+    return (
+      isValidId(operation.id) &&
+      typeof operation.value === "string" &&
+      operation.value.length > 0 &&
+      (operation.after === null || isValidId(operation.after))
+    );
+  }
+
+  if (operation.type === "delete") {
+    return isValidId(operation.target);
+  }
+
+  return false;
+}
 
 io.on("connection", (socket) => {
     console.log(`Connection request by ${socket.id}`);
@@ -87,12 +135,40 @@ socket.on("send-test-message", ({ text }) => {
   }
 });
 // JOIN DOCUMENT EVENT ENDS
-  socket.on("disconnect", () => {
-    console.log(`Socket disconnected (message from server): ${socket.id}`);
+
+socket.on("submit-operation", ({ operation } = {}) => {
+  const { documentId, roomName } = socket.data;
+
+  if (!documentId || !roomName) {
+    socket.emit("operation-error", {
+      message: "Join a document before submitting operations",
+    });
+    return;
+  }
+
+  if (!isValidOperation(operation)) {
+    socket.emit("operation-error", {
+      message: "Invalid CRDT operation",
+    });
+    return;
+  }
+
+  const operationKey = getOperationKey(operation);
+
+  console.log(
+    `${socket.id} submitted ${operationKey} for document ${documentId}`
+  );
+
+  socket.emit("operation-accepted", {
+    operationKey,
   });
 });
 
 
+  socket.on("disconnect", () => {
+    console.log(`Socket disconnected (message from server): ${socket.id}`);
+  });
+});
 
 try {
   await mongoose.connect(MONGODB_URI);

@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const docSchema = new mongoose.Schema(
   {
     title: {
@@ -11,4 +13,5 @@ const docSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);  
+);
+export default mongoose.model("Doc", docSchema);

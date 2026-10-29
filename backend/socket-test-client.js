@@ -1,7 +1,9 @@
 import { io } from "socket.io-client";
+import { RGA } from "../shared/rga.js";
 
 const role = process.argv[2] ?? "receiver";
 const text = process.argv.slice(3).join(" ") || "Hello from the sender";
+const rga = new RGA(`test-${role}`);
 
 const socket = io("http://localhost:5000", {
   transports: ["websocket"],
@@ -19,17 +21,15 @@ socket.on("joined-document", ({ documentId }) => {
   console.log(`[${role}] Joined document: ${documentId}`);
 
   if (role === "sender") {
-    console.log(`[sender] Sending: ${text}`);
+    const operation = rga.localInsert(0, "A");
 
-    socket.emit("send-test-message", {
-      text,
+    console.log("[sender] Submitting operation:", operation);
+
+    socket.emit("submit-operation", {
+      operation,
     });
-
-    setTimeout(() => {
-      socket.disconnect();
-    }, 1000);
   } else {
-    console.log("[receiver] Waiting for a room message...");
+    console.log("[receiver] Waiting...");
   }
 });
 
@@ -56,4 +56,14 @@ socket.on("disconnect", (reason) => {
 socket.on("connect_error", (error) => {
   console.error(`[${role}] Connection failed: ${error.message}`);
   process.exit(1);
+});
+
+socket.on("operation-accepted", ({ operationKey }) => {
+  console.log(`[sender] Server accepted: ${operationKey}`);
+  socket.disconnect();
+});
+
+socket.on("operation-error", ({ message }) => {
+  console.error(`[${role}] Operation failed: ${message}`);
+  socket.disconnect();
 });
