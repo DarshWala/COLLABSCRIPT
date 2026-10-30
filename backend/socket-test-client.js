@@ -58,6 +58,13 @@ socket.on("connect_error", (error) => {
   process.exit(1);
 });
 
+socket.on("remote-operation", ({ sequence, operation }) => {
+  rga.apply(operation);
+  console.log(`[${role}] Received sequence ${sequence}:`, operation);
+  console.log(`[${role}] Current RGA text: "${rga.toString()}"`);
+  socket.disconnect();
+});
+
 socket.on("operation-accepted", ({ operationKey }) => {
   console.log(`[sender] Server accepted: ${operationKey}`);
   socket.disconnect();

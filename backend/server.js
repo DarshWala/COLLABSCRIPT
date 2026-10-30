@@ -136,7 +136,9 @@ socket.on("send-test-message", ({ text }) => {
 });
 // JOIN DOCUMENT EVENT ENDS
 
-socket.on("submit-operation", ({ operation } = {}) => {
+
+
+socket.on("submit-operation", async ({ operation } = {}) => {
   const { documentId, roomName } = socket.data;
 
   if (!documentId || !roomName) {
@@ -155,13 +157,76 @@ socket.on("submit-operation", ({ operation } = {}) => {
 
   const operationKey = getOperationKey(operation);
 
-  console.log(
-    `${socket.id} submitted ${operationKey} for document ${documentId}`
-  );
+  try {
+    const existingOperation = await Operation.findOne({
+      documentId,
+      operationKey,
+    }).select("sequence");
 
-  socket.emit("operation-accepted", {
-    operationKey,
-  });
+    if (existingOperation) {
+      socket.emit("operation-accepted", {
+        operationKey,
+        sequence: existingOperation.sequence,
+        duplicate: true,
+      });
+      return;
+    }
+
+    const doc = await Doc.findByIdAndUpdate(
+      documentId,
+      { $inc: { nextSequence: 1 } },
+      { returnDocument: "after" }
+    ).select("nextSequence");
+
+    if (!doc) {
+      socket.emit("operation-error", {
+        message: "Document no longer exists",
+      });
+      return;
+    }
+
+    const savedOperation = await Operation.create({
+      documentId,
+      sequence: doc.nextSequence,
+      operationKey,
+      operation,
+    });
+
+    console.log(
+      `${socket.id} saved ${operationKey} as sequence ${savedOperation.sequence}`
+    );
+
+    socket.to(roomName).emit("remote-operation", {
+      sequence: savedOperation.sequence,
+      operation: savedOperation.operation,
+    });
+
+    socket.emit("operation-accepted", {
+      operationKey,
+      sequence: savedOperation.sequence,
+      duplicate: false,
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      const existingOperation = await Operation.findOne({
+        documentId,
+        operationKey,
+      }).select("sequence");
+
+      socket.emit("operation-accepted", {
+        operationKey,
+        sequence: existingOperation.sequence,
+        duplicate: true,
+      });
+      return;
+    }
+
+    console.error("Could not save operation:", error);
+
+    socket.emit("operation-error", {
+      message: "Could not save operation",
+    });
+  }
 });
 
 
