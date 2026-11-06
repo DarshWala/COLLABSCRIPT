@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 import { RGA } from "../shared/rga.js";
 
 const role = process.argv[2] ?? "receiver";
-const text = process.argv.slice(3).join(" ") || "Hello from the sender";
+// const text = process.argv.slice(3).join(" ") || "Hello from the sender";
 const rga = new RGA(`test-${role}`);
 
 const socket = io("http://localhost:5000", {
@@ -17,11 +17,22 @@ socket.on("connect", () => {
   });
 });
 
+socket.on("document-history", ({ operations }) => {
+  for (const { sequence, operation } of operations) {
+    rga.apply(operation);
+    console.log(`[${role}] Replayed sequence ${sequence}`);
+  }
+
+  console.log(
+    `[${role}] Text after history replay: "${rga.toString()}"`
+  );
+});
+
 socket.on("joined-document", ({ documentId }) => {
   console.log(`[${role}] Joined document: ${documentId}`);
 
   if (role === "sender") {
-    const operation = rga.localInsert(0, "A");
+    const operation = rga.localInsert(0, "c");
 
     console.log("[sender] Submitting operation:", operation);
 

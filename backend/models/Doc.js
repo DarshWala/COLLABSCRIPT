@@ -6,11 +6,6 @@ const docSchema = new mongoose.Schema(
       type: String,
       default: "Untitled",
     },
-
-    nextSequence: {
-      type: Number,
-      default: 0,
-    },
   },
   { timestamps: true }
 );
